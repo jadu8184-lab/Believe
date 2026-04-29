@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Believe - Richmond FC Habit Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  /* Minimalist Richmond FC Palette */
+  --navy-bg: #050B14;
+  --navy-surface: #0B162C;
+  --navy-surface-alt: #152A50;
+  --yellow: #FDE100;
+  --yellow-hover: #E5CB00;
+  --yellow-muted: rgba(253, 225, 0, 0.15);
+  --red: #D32F2F;
+  --red-muted: rgba(211, 47, 47, 0.15);
+  --text-main: #F4F4F5;
+  --text-muted: #94A3B8;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --font-heading: 'Bebas Neue', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background: #000; font-family: var(--font-body); display: flex; justify-content: center; min-height: 100vh; color: var(--text-main); }
+::-webkit-scrollbar { width: 0; } /* Hide scrollbar for clean look */
+
+.phone { width: 100%; max-width: 400px; min-height: 100vh; background: var(--navy-bg); display: flex; flex-direction: column; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+
+/* HEADER */
+.hdr { display: flex; align-items: center; justify-content: center; padding: 12px 20px; background: rgba(5, 11, 20, 0.85); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 20; border-bottom: 1px solid var(--border-subtle); min-height: 70px; }
+.logo-img { height: 45px; object-fit: contain; }
+
+/* STREAK ROW */
+.streak-row { background: var(--navy-surface); padding: 16px 20px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--border-subtle); }
+.s-badge { background: var(--yellow); color: var(--navy-bg); font-family: var(--font-heading); font-size: 22px; letter-spacing: 1px; padding: 6px 16px; border-radius: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform .15s; }
+.s-badge:active { transform: scale(.96); }
+.lv-wrap { flex: 1; }
+.lv-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;}
+.lv-info span:first-child { color: var(--yellow); }
+.lv-bar { height: 6px; background: var(--navy-surface-alt); border-radius: 3px; overflow: hidden; }
+.lv-fill { height: 100%; background: var(--yellow); border-radius: 3px; transition: width .6s ease; }
+.s-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display:flex; align-items:center; }
+
+/* SCREENS */
+.scr { display: none; flex-direction: column; flex: 1; }
+.scr.on { display: flex; }
+.content { flex: 1; padding-bottom: 90px; overflow-y: auto; }
+
+/* SETUP SCREEN */
+#scr-setup .content { padding: 30px 20px; }
+.setup-header { text-align: center; margin-bottom: 30px; }
+.setup-title { font-family: var(--font-heading); font-size: 42px; color: var(--yellow); letter-spacing: 2px; line-height: 1;}
+.setup-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-top: 12px; }
+
+.setup-box { background: var(--navy-surface); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+.setup-box-title { font-family: var(--font-heading); color: var(--text-main); font-size: 22px; margin-bottom: 16px; letter-spacing: 1px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; }
+.setup-input-group { margin-bottom: 16px; display: flex; gap: 12px; flex-direction: column;}
+.setup-input-row { display: flex; gap: 10px; }
+.setup-label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.setup-input { background: var(--navy-bg); border: 1px solid var(--border-subtle); color: var(--text-main); padding: 14px 16px; border-radius: 10px; font-family: var(--font-body); font-size: 15px; width: 100%; outline: none; transition: all 0.2s; }
+.setup-input::placeholder { color: #4B5E7C; }
+.setup-input:focus { border-color: var(--yellow); background: rgba(253, 225, 0, 0.02); }
+.setup-icon-input { width: 70px; text-align: center; font-size: 24px; }
+
+.avatar-selector { display: flex; gap: 10px; margin-top: 8px; justify-content: space-between; }
+.avatar-option { width: 54px; height: 54px; border-radius: 50%; background: var(--navy-bg); border: 2px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; transition: all 0.2s; }
+.avatar-option.selected { border-color: var(--yellow); background: var(--yellow-muted); transform: scale(1.05); }
+
+.setup-btn { width: 100%; background: var(--yellow); color: var(--navy-bg); font-family: var(--font-heading); font-size: 24px; letter-spacing: 2px; border: none; padding: 20px; border-radius: 12px; cursor: pointer; margin-top: 10px; transition: transform 0.15s, background 0.2s; }
+.setup-btn:active { transform: scale(0.98); background: var(--yellow-hover); }
+
+/* COACH SECTION */
+.coach-wrap { position: relative; background: linear-gradient(to bottom, var(--navy-surface), var(--navy-bg)); height: 260px; display: flex; align-items: flex-start; padding-top: 10px; border-bottom: 1px solid var(--border-subtle); overflow: visible; }
+.lasso-img { position: absolute; bottom: 0; right: -10px; width: 230px; height: 270px; object-fit: contain; object-position: center bottom; pointer-events: none; z-index: 1; filter: drop-shadow(-5px 5px 15px rgba(0,0,0,0.5)); }
+.bubble-area { padding: 20px; flex: 1; z-index: 2; position: relative; display: flex; flex-direction: column; max-width: 230px; }
+.speech-bubble { background: #FFF; border-radius: 16px 16px 16px 4px; padding: 16px 20px; position: relative; cursor: pointer; transition: transform .15s; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+.speech-bubble:active { transform: scale(.97); }
+.speech-bubble::after { content: ''; position: absolute; left: 16px; bottom: -10px; width: 0; height: 0; border-top: 12px solid #FFF; border-right: 12px solid transparent; }
+.bubble-text { font-size: 15px; color: #000; line-height: 1.5; font-weight: 600; }
+.bubble-tap { font-size: 10px; color: #888; margin-top: 10px; letter-spacing: .5px; text-transform: uppercase; font-weight: 700; }
+.coach-name { font-family: var(--font-heading); font-size: 14px; letter-spacing: 2px; color: var(--text-muted); margin-top: 20px; padding-left: 4px; }
+
+.sec-title { font-family: var(--font-heading); font-size: 16px; letter-spacing: 3px; color: var(--text-muted); padding: 24px 20px 12px; text-transform: uppercase; }
+
+/* TASKS */
+.task-wrap { margin: 0 20px 16px; }
+.task-card { border-radius: 14px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid transparent; background: var(--navy-surface); transition: all .2s ease; display: flex; align-items: center; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.task-card:active { transform: scale(.98); }
+.task-card.cmp { border-color: var(--yellow); background: var(--yellow-muted); }
+.task-icon-big { font-size: 32px; flex-shrink: 0; margin-right: 16px; background: var(--navy-bg); width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+.task-card.cmp .task-icon-big { background: transparent; }
+.task-details { flex: 1; }
+.task-name { font-family: var(--font-heading); font-size: 24px; letter-spacing: 1px; color: var(--text-main); line-height: 1.1; margin-bottom: 4px; }
+.task-sub { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 500; }
+.task-chk { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-left: 10px; transition: all .2s; background: var(--navy-bg); }
+.task-card.cmp .task-chk { background: var(--yellow); border-color: var(--yellow); }
+
+/* DOTS (HISTORY) */
+.task-dots { display: flex; gap: 4px; margin-top: 10px; padding: 0 4px; }
+.tdot { flex: 1; height: 4px; border-radius: 2px; background: var(--navy-surface-alt); }
+.tdot.f { background: var(--yellow); opacity: 0.5; }
+.tdot.cur { background: var(--yellow); }
+
+/* CONGRATS & OTHER MODULES */
+.congrats-wrap { display: none; margin: 20px; border-radius: 16px; overflow: hidden; background: linear-gradient(135deg, var(--navy-surface), var(--navy-bg)); border: 1px solid rgba(253, 225, 0, 0.3); animation: fadeIn .5s ease; position: relative;}
+.congrats-wrap.show { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px) } to { opacity: 1; transform: translateY(0) } }
+.congrats-inner { padding: 24px; text-align: center; }
+.congrats-icon { font-size: 46px; margin-bottom: 12px; }
+.congrats-title { font-family: var(--font-heading); font-size: 32px; letter-spacing: 3px; color: var(--yellow); margin-bottom: 8px; }
+.congrats-sub { font-size: 14px; color: var(--text-main); line-height: 1.6; }
+
+.day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 0 20px 20px; }
+.dc { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; transition: all 0.2s; }
+.dc.full { background: var(--yellow); color: var(--navy-bg); box-shadow: 0 0 10px rgba(253, 225, 0, 0.3); }
+.dc.partial { background: var(--yellow-muted); color: var(--text-main); border: 1px solid rgba(253, 225, 0, 0.3); }
+.dc.empty { background: var(--navy-surface-alt); color: var(--text-muted); }
+.dc.future { background: var(--navy-surface); color: var(--border-subtle); }
+.dc.today { background: rgba(253, 225, 0, 0.1); color: var(--yellow); border: 2px solid var(--yellow); }
+
+/* PROGRESS */
+.prog-hero { display: flex; flex-direction: column; align-items: center; padding: 30px 0 20px; }
+.prog-big-num { font-family: var(--font-heading); font-size: 96px; color: var(--text-main); line-height: 1; text-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+.prog-sub { font-size: 14px; font-weight: 700; color: var(--yellow); letter-spacing: 3px; text-transform: uppercase; margin-top: 8px;}
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px; margin-bottom: 20px; }
+.sbox { background: var(--navy-surface); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 18px; text-align: center; }
+.sbox-l { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.sbox-v { font-family: var(--font-heading); font-size: 38px; color: var(--text-main); margin: 6px 0 2px; }
+.sbox-u { font-size: 11px; color: var(--text-muted); font-weight: 500;}
+
+/* PROFILE */
+.prof-header { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; }
+.prof-avatar { width: 90px; height: 90px; border-radius: 50%; background: var(--yellow); display: flex; align-items: center; justify-content: center; font-size: 40px; border: 4px solid var(--navy-bg); box-shadow: 0 0 0 2px var(--yellow); margin-bottom: 16px; }
+.prof-name { font-family: var(--font-heading); font-size: 32px; letter-spacing: 2px; color: var(--text-main); }
+.prof-badges { margin-top: 14px; display: flex; gap: 10px; }
+.prof-badge { font-family: var(--font-heading); font-size: 16px; padding: 6px 16px; border-radius: 6px; letter-spacing: 1px; }
+.badge-y { background: var(--yellow); color: var(--navy-bg); }
+.badge-n { background: var(--navy-surface-alt); color: var(--yellow); }
+
+.prof-stats { background: var(--navy-surface); border: 1px solid var(--border-subtle); border-radius: 14px; overflow: hidden; margin: 0 20px 20px; }
+.p-stat-row { padding: 18px 20px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; }
+.p-stat-row:last-child { border-bottom: none; }
+.p-stat-l { font-size: 14px; font-weight: 600; color: var(--text-muted); }
+.p-stat-v { font-family: var(--font-heading); font-size: 22px; color: var(--text-main); }
+
+.prof-verdict { background: linear-gradient(135deg, rgba(253, 225, 0, 0.1), transparent); border: 1px solid rgba(253, 225, 0, 0.2); border-radius: 14px; padding: 20px; margin: 0 20px 24px; }
+.verdict-title { font-family: var(--font-heading); font-size: 16px; letter-spacing: 2px; color: var(--yellow); margin-bottom: 10px; }
+.verdict-text { font-size: 15px; color: var(--text-main); font-style: italic; line-height: 1.6; font-weight: 500; }
+
+.btn-reset { margin: 0 20px; background: transparent; border: 1px solid var(--red); color: var(--red); font-size: 16px; font-family: var(--font-heading); letter-spacing: 2px; padding: 16px; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; display: block; width: calc(100% - 40px); }
+.btn-reset:active { background: var(--red-muted); }
+
+/* NAV */
+.bnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 400px; background: rgba(11, 22, 44, 0.95); backdrop-filter: blur(10px); border-top: 1px solid var(--border-subtle); display: flex; height: 76px; z-index: 30; padding-bottom: 8px; }
+.nbtn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; border: none; background: transparent; color: var(--text-muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; transition: color .2s; }
+.nbtn.on { color: var(--yellow); }
+.ni { font-size: 22px; }
+
+/* OVERLAYS & NOTICES */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 100; align-items: center; justify-content: center; padding: 24px; backdrop-filter: blur(5px); }
+.overlay.show { display: flex; }
+.ocard { background: var(--navy-surface); border: 1px solid rgba(253, 225, 0, 0.3); border-radius: 20px; padding: 32px 24px; width: 100%; max-width: 320px; text-align: center; animation: popIn .4s cubic-bezier(.34,1.56,.64,1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+@keyframes popIn { from { transform: scale(.85); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+.ocard-fire { font-size: 64px; margin-bottom: 10px; filter: drop-shadow(0 0 15px rgba(253,225,0,0.5)); }
+.ocard-title { font-family: var(--font-heading); font-size: 38px; letter-spacing: 3px; color: var(--text-main); margin-bottom: 4px; }
+.ocard-streak { font-family: var(--font-heading); font-size: 72px; color: var(--yellow); line-height: 1; margin: 10px 0; }
+.ocard-unit { font-size: 14px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; }
+.ocard-msg { font-size: 15px; color: var(--text-main); line-height: 1.6; margin-bottom: 24px; font-style: italic; }
+.ocard-close { background: var(--yellow); color: var(--navy-bg); border: none; font-family: var(--font-heading); font-size: 20px; letter-spacing: 2px; padding: 16px 0; border-radius: 10px; cursor: pointer; width: 100%; transition: transform 0.15s; }
+.ocard-close:active { transform: scale(.96); }
+
+.date-chip { margin: 16px 20px 0; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="hdr" id="mainHeader">
+    <img src="https://github.com/jadu8184-lab/Believe/shopTrimmings_8_902b5d41-61eb-4ba3-9ae1-5c8af2e3f5ae.webp" class="logo-img" alt="BELIEVE">
+  </div>
+
+  <div class="streak-row" id="mainStreakRow">
+    <div class="s-badge" onclick="openStreakPopup()">🔥 <span id="sNum">0</span></div>
+    <div class="lv-wrap">
+      <div class="lv-info">
+        <span id="lvLabel">LVL 1</span>
+        <span id="lvNext">→ LVL 2</span>
+      </div>
+      <div class="lv-bar"><div class="lv-fill" id="lvFill" style="width:0%"></div></div>
+    </div>
+    <div class="s-label">DAY <span id="dNum" style="margin: 0 4px; color:var(--text-main);">1</span> / 21</div>
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <div class="scr" id="scr-setup">
+    <div class="content">
+      <div class="setup-header">
+        <div class="setup-title">WELCOME TO AFC RICHMOND</div>
+        <div class="setup-desc">You are bound to these 5 tasks for the next 21 days. Believe in the process.</div>
+      </div>
+
+      <div class="setup-box">
+        <div class="setup-box-title">PLAYER PROFILE</div>
+        <div class="setup-input-group">
+          <label class="setup-label">Your Name</label>
+          <input type="text" id="mgr-name" class="setup-input" placeholder="e.g. Coach Lasso" maxlength="20">
+        </div>
+        <div class="setup-input-group" style="margin-bottom: 0;">
+          <label class="setup-label">Pick Your Spirit</label>
+          <div class="avatar-selector" id="avatarSelector">
+            <div class="avatar-option selected" data-av="⚽">⚽</div>
+            <div class="avatar-option" data-av="哨">哨</div>
+            <div class="avatar-option" data-av="🍵">🍵</div>
+            <div class="avatar-option" data-av="📋">📋</div>
+            <div class="avatar-option" data-av="🧢">🧢</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-box">
+        <div class="setup-box-title">THE GAME PLAN (5 TASKS)</div>
+        
+        <div class="setup-input-group">
+          <label class="setup-label">TASK 1</label>
+          <div class="setup-input-row">
+            <input type="text" id="t1-icon" class="setup-input setup-icon-input" value="🏃" maxlength="2">
+            <input type="text" id="t1-name" class="setup-input" placeholder="Morning Run" maxlength="20">
+          </div>
+          <input type="text" id="t1-sub" class="setup-input" placeholder="Subtitle (e.g. 5K before breakfast)" maxlength="40">
+        </div>
+
+        <div class="setup-input-group">
+          <label class="setup-label">TASK 2</label>
+          <div class="setup-input-row">
+            <input type="text" id="t2-icon" class="setup-input setup-icon-input" value="🥗" maxlength="2">
+            <input type="text" id="t2-name" class="setup-input" placeholder="Fuel Right" maxlength="20">
+          </div>
+          <input type="text" id="t2-sub" class="setup-input" placeholder="Subtitle (e.g. Hit protein goals)" maxlength="40">
+        </div>
+
+        <div class="setup-input-group">
+          <label class="setup-label">TASK 3</label>
+          <div class="setup-input-row">
+            <input type="text" id="t3-icon" class="setup-input setup-icon-input" value="🧠" maxlength="2">
+            <input type="text" id="t3-name" class="setup-input" placeholder="Mental Reps" maxlength="20">
+          </div>
+          <input type="text" id="t3-sub" class="setup-input" placeholder="Subtitle (e.g. 15 min meditation)" maxlength="40">
+        </div>
+
+        <div class="setup-input-group">
+          <label class="setup-label">TASK 4</label>
+          <div class="setup-input-row">
+            <input type="text" id="t4-icon" class="setup-input setup-icon-input" value="💧" maxlength="2">
+            <input type="text" id="t4-name" class="setup-input" placeholder="Hydrate" maxlength="20">
+          </div>
+          <input type="text" id="t4-sub" class="setup-input" placeholder="Subtitle (e.g. 3 Liters of water)" maxlength="40">
+        </div>
+
+        <div class="setup-input-group">
+          <label class="setup-label">TASK 5</label>
+          <div class="setup-input-row">
+            <input type="text" id="t5-icon" class="setup-input setup-icon-input" value="💤" maxlength="2">
+            <input type="text" id="t5-name" class="setup-input" placeholder="Rest & Recover" maxlength="20">
+          </div>
+          <input type="text" id="t5-sub" class="setup-input" placeholder="Subtitle (e.g. 8 hours sleep)" maxlength="40">
+        </div>
+      </div>
+
+      <button class="setup-btn" onclick="saveNewTasks()">LOCK IN FOR 21 DAYS</button>
+    </div>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div class="scr" id="scr-home">
+    <div class="content">
+      <div class="coach-wrap">
+        <div class="bubble-area">
+          <div class="speech-bubble" onclick="nextCoachMsg()">
+            <div class="bubble-text" id="coachMsg">Taking on a challenge is a lot like riding a horse, isn't it?</div>
+            <div class="bubble-tap">Tap for wisdom ↺</div>
+          </div>
+          <div class="coach-name">— TED LASSO</div>
+        </div>
+        <img class="lasso-img" src="https://github.com/jadu8184-lab/Believe/sefa.png" alt="Ted Lasso" onerror="this.style.display='none'">
+      </div>
+
+      <div class="date-chip" id="dateChip"></div>
+
+      <div class="congrats-wrap" id="congratsWrap">
+        <div class="congrats-inner">
+          <div class="congrats-icon">🏆</div>
+          <div class="congrats-title">MISSION COMPLETE!</div>
+          <div class="congrats-sub">You have completed all of today's tasks. The team grows stronger.</div>
+        </div>
+      </div>
+
+      <div class="sec-title">Today's Playbook</div>
+      <div id="dynamicTaskList"></div>
+
+      <div class="sec-title" style="margin-top: 10px;">The Season (21 Days)</div>
+      <div class="day-grid" id="dayGrid"></div>
+    </div>
+  </div>
+
+  <!-- PROGRESS SCREEN -->
+  <div class="scr" id="scr-prog">
+    <div class="content">
+      <div class="sec-title">Season Stats</div>
+      <div class="prog-hero">
+        <div class="prog-big-num" id="pn">0</div>
+        <div class="prog-sub">Days Conquered</div>
+      </div>
+      <div class="stat-grid">
+        <div class="sbox"><div class="sbox-l">Current Streak</div><div class="sbox-v" id="pp-s">0</div><div class="sbox-u">days</div></div>
+        <div class="sbox"><div class="sbox-l">Best Streak</div><div class="sbox-v" id="pp-b">0</div><div class="sbox-u">days</div></div>
+        <div class="sbox"><div class="sbox-l">Tasks Done</div><div class="sbox-v" id="pp-t">0</div><div class="sbox-u">total</div></div>
+        <div class="sbox"><div class="sbox-l">Win Rate</div><div class="sbox-v" id="pp-r">0%</div><div class="sbox-u">completion</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div class="scr" id="scr-prof">
+    <div class="content">
+      <div class="prof-header">
+        <div class="prof-avatar" id="prof-av-disp">⚽</div>
+        <div class="prof-name" id="prof-name-disp">MANAGER</div>
+        <div class="prof-badges">
+          <div class="prof-badge badge-y" id="prof-lv">LVL 1</div>
+          <div class="prof-badge badge-n" id="prof-streak">🔥 0 STREAK</div>
+        </div>
+      </div>
+      
+      <div class="prof-stats">
+        <div class="p-stat-row"><span class="p-stat-l">Best Streak</span><span class="p-stat-v" id="prof-best">0</span></div>
+        <div class="p-stat-row"><span class="p-stat-l">Seasons Completed</span><span class="p-stat-v" id="prof-runs">0</span></div>
+        <div class="p-stat-row"><span class="p-stat-l">Total Tasks Won</span><span class="p-stat-v" id="prof-tasks">0</span></div>
+      </div>
+
+      <div class="prof-verdict">
+        <div class="verdict-title">TED'S VERDICT</div>
+        <div class="verdict-text" id="lassoVerdict">"Believe."</div>
+      </div>
+
+      <button class="btn-reset" onclick="confirmReset()">RESET FRANCHISE</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bnav" id="mainNav">
+    <button class="nbtn on" id="nb-home" onclick="goScr('home')"><span class="ni">📋</span><span>Playbook</span></button>
+    <button class="nbtn" id="nb-prog" onclick="goScr('prog')"><span class="ni">📈</span><span>Stats</span></button>
+    <button class="nbtn" id="nb-prof" onclick="goScr('prof')"><span class="ni">👤</span><span>Profile</span></button>
+  </div>
+
+  <!-- OVERLAY -->
+  <div class="overlay" id="streakOverlay" onclick="closeStreakPopup(event)">
+    <div class="ocard">
+      <div class="ocard-fire">🔥</div>
+      <div class="ocard-title">YOUR STREAK</div>
+      <div class="ocard-streak" id="popStreak">0</div>
+      <div class="ocard-unit">days in a row</div>
+      <div class="ocard-msg" id="popMsg">"Believe."</div>
+      <button class="ocard-close" onclick="closeStreakPopup()">BACK TO THE PITCH</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── HELPERS ────────────────────────────────────────────────────────────────
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(str) {
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'}).toUpperCase();
+}
+
+// ─── AVATAR SELECTION LOGIC ─────────────────────────────────────────────────
+let setupSelectedAvatar = '⚽';
+document.querySelectorAll('#avatarSelector .avatar-option').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('#avatarSelector .avatar-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    setupSelectedAvatar = el.getAttribute('data-av');
+  });
+});
+
+// ─── STORAGE ────────────────────────────────────────────────────────────────
+const KEY = 'believe_app_v2';
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return null; }
+}
+function saveState() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+function freshState() {
+  return {
+    needsSetup: true,
+    managerName: "Coach",
+    avatar: "⚽",
+    tasks: [],           
+    streak: 0,
+    bestStreak: 0,
+    currentDay: 1,       
+    completedRuns: 0,
+    totalTasksDone: 0,
+    lastActiveDate: null, 
+    startDate: todayStr(),
+    todayDone: [],       
+    todayDate: todayStr(),
+    history: []
+  };
+}
+
+let state = loadState() || freshState();
+
+// ─── INIT / DATE LOGIC ───────────────────────────────────────────────────────
+function checkDateAndSync() {
+  const today = todayStr();
+  if (state.todayDate === today) return; 
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+
+  if (state.todayDate && !state.needsSetup) {
+    state.history.push({ date: state.todayDate, done: [...state.todayDone] });
+    if (state.history.length > 21) state.history = state.history.slice(-21);
+  }
+
+  const allDoneYesterday = state.tasks.length > 0 && state.todayDone.every(Boolean);
+
+  if (allDoneYesterday && !state.needsSetup) {
+    state.streak += 1;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+    state.totalTasksDone += state.todayDone.filter(Boolean).length;
+    
+    state.currentDay += 1;
+    if (state.currentDay > 21) {
+      state.completedRuns += 1;
+      state.currentDay = 1;
+      state.startDate = today;
+      state.needsSetup = true; 
+      state.history = []; 
+    }
+  } else if (!state.needsSetup) {
+    state.streak = 0;
+    state.currentDay = 1;
+    state.startDate = today;
+  }
+
+  state.todayDone = new Array(state.tasks.length).fill(false);
+  state.todayDate = today;
+  state.lastActiveDate = today;
+  saveState();
+}
+
+// ─── SETUP LOGIC ─────────────────────────────────────────────────────────────
+function saveNewTasks() {
+  const nameVal = document.getElementById('mgr-name').value.trim() || 'Manager';
+  const newTasks = [];
+  
+  for(let i=1; i<=5; i++) {
+    const tName = document.getElementById(`t${i}-name`).value.trim();
+    const tSub = document.getElementById(`t${i}-sub`).value.trim();
+    const tIcon = document.getElementById(`t${i}-icon`).value.trim() || '🔥';
+    
+    if(!tName) {
+      alert(`Please enter a name for Task ${i}`);
+      return;
+    }
+    newTasks.push({ name: tName, sub: tSub, icon: tIcon });
+  }
+
+  state.managerName = nameVal;
+  state.avatar = setupSelectedAvatar;
+  state.tasks = newTasks;
+  state.todayDone = new Array(5).fill(false);
+  state.needsSetup = false;
+  state.startDate = todayStr(); 
+  state.currentDay = 1;
+  saveState();
+  
+  bootApp();
+}
+
+// ─── COACH MESSAGES ──────────────────────────────────────────────────────────
+const coachMsgs = [
+  "Taking on a challenge is a lot like riding a horse, isn’t it? ",
+  "If that’s a joke, I love it. If not, can’t wait to unpack that with you later.",
+  "As the man once said, the harder you work, the luckier you get.",
+  "You know what the happiest animal on earth is? It’s a goldfish. You know why? It’s got a 10-second memory.",
+  "I think that you might be so sure that you’re one in a million, that you forget that you’re just one in 11.",
+  "You beating yourself up is like Woody Allen playing the clarinet. I don’t want to hear it.",
+  "Your body is like day-old rice. If it ain’t warmed up properly, something real bad could happen.",
+  "Believe.",
+  "I promise you there is something worse out there than being sad, and that’s being alone and being sad.",
+  "I believe in communism. Rom-communism, that is.",
+  "Be curious not judgemental."
+];
+const lassoVerdicts = [
+  "Taking on a challenge is a lot like riding a horse, isn’t it?",
+  "As the man once said, the harder you work, the luckier you get.",
+  "Be curious not judgemental.",
+  "You know what the happiest animal on earth is? It’s a goldfish.",
+  "I believe in communism. Rom-communism, that is.",
+  "Believe."
+];
+
+let msgIdx = 0;
+function nextCoachMsg() {
+  msgIdx = (msgIdx + 1) % coachMsgs.length;
+  document.getElementById('coachMsg').textContent = coachMsgs[msgIdx];
+}
+function getLassoVerdict() {
+  const idx = Math.min(lassoVerdicts.length - 1, Math.floor(state.streak / 3));
+  return lassoVerdicts[idx];
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function renderTasksUI() {
+  const container = document.getElementById('dynamicTaskList');
+  let html = '';
+  
+  state.tasks.forEach((task, i) => {
+    const isDone = state.todayDone[i];
+    
+    const hist = state.history.slice(-7);
+    let dotsHtml = '';
+    for (let j = 0; j < 7; j++) {
+      const hd = hist[j];
+      dotsHtml += `<div class="tdot ${hd && hd.done[i] ? 'f' : ''}"></div>`;
+    }
+    dotsHtml += `<div class="tdot ${isDone ? 'cur' : ''}"></div>`;
+
+    html += `
+      <div class="task-wrap">
+        <div class="task-card ${isDone ? 'cmp' : ''}" onclick="tap(${i})">
+          <div class="task-icon-big">${task.icon}</div>
+          <div class="task-details">
+            <div class="task-name">${task.name}</div>
+            <div class="task-sub">${task.sub}</div>
+            <div class="task-dots">${dotsHtml}</div>
+          </div>
+          <div class="task-chk">
+            ${isDone ? '<svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="#050B14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+function renderAll() {
+  if(state.needsSetup) return; 
+
+  const lv = Math.min(10, Math.floor(state.streak / 2) + 1);
+  const pct = ((state.streak % 2) / 2) * 100;
+  document.getElementById('sNum').textContent = state.streak;
+  document.getElementById('dNum').textContent = state.currentDay;
+  document.getElementById('lvLabel').textContent = 'LVL ' + lv;
+  document.getElementById('lvNext').textContent = '→ LVL ' + Math.min(10, lv + 1);
+  document.getElementById('lvFill').style.width = pct + '%';
+
+  document.getElementById('dateChip').textContent = fmtDate(state.todayDate);
+
+  renderTasksUI();
+
+  const allDone = state.todayDone.every(Boolean);
+  document.getElementById('congratsWrap').classList.toggle('show', allDone);
+
+  renderGrid();
+
+  if (allDone) {
+    document.getElementById('coachMsg').textContent = 'All tasks conquered! As the man once said, the harder you work, the luckier you get.';
+  } else {
+    document.getElementById('coachMsg').textContent = coachMsgs[msgIdx];
+  }
+
+  // Profile data
+  document.getElementById('prof-av-disp').textContent = state.avatar;
+  document.getElementById('prof-name-disp').textContent = state.managerName.toUpperCase();
+  document.getElementById('prof-lv').textContent = 'LVL ' + lv;
+  document.getElementById('prof-streak').textContent = '🔥 ' + state.streak + ' STREAK';
+  document.getElementById('prof-best').textContent = state.bestStreak;
+  document.getElementById('prof-runs').textContent = state.completedRuns;
+  document.getElementById('prof-tasks').textContent = state.totalTasksDone + state.todayDone.filter(Boolean).length;
+  document.getElementById('lassoVerdict').textContent = '"' + getLassoVerdict() + '"';
+}
+
+function renderGrid() {
+  const g = document.getElementById('dayGrid');
+  const start = new Date(state.startDate + 'T00:00:00');
+  let h = '';
+  const totalTasks = state.tasks.length;
+  
+  for (let d = 1; d <= 21; d++) {
+    const cellDate = new Date(start);
+    cellDate.setDate(start.getDate() + d - 1);
+    const cellStr = `${cellDate.getFullYear()}-${String(cellDate.getMonth()+1).padStart(2,'0')}-${String(cellDate.getDate()).padStart(2,'0')}`;
+    const isToday = cellStr === state.todayDate;
+    const histEntry = state.history.find(x => x.date === cellStr);
+    
+    if (isToday) {
+      h += `<div class="dc today">${d}</div>`;
+    } else if (histEntry) {
+      const cnt = histEntry.done.filter(Boolean).length;
+      h += `<div class="dc ${cnt === totalTasks ? 'full' : cnt > 0 ? 'partial' : 'empty'}">${d}</div>`;
+    } else if (cellDate < new Date(state.todayDate + 'T00:00:00')) {
+      h += `<div class="dc empty">${d}</div>`;
+    } else {
+      h += `<div class="dc future">${d}</div>`;
+    }
+  }
+  g.innerHTML = h;
+}
+
+function renderProg() {
+  document.getElementById('pn').textContent = state.currentDay - 1; // Completed days
+  document.getElementById('pp-s').textContent = state.streak;
+  document.getElementById('pp-b').textContent = state.bestStreak;
+  
+  const currentTotal = state.totalTasksDone + state.todayDone.filter(Boolean).length;
+  document.getElementById('pp-t').textContent = currentTotal;
+  
+  const totalSlots = (state.currentDay - 1) * state.tasks.length + state.tasks.length;
+  const rate = totalSlots > 0 ? Math.round((currentTotal / totalSlots) * 100) : 0;
+  document.getElementById('pp-r').textContent = rate + '%';
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
+function tap(i) {
+  state.todayDone[i] = !state.todayDone[i];
+  state.lastActiveDate = state.todayDate;
+  saveState();
+  renderAll();
+}
+
+function openStreakPopup() {
+  if(state.needsSetup) return;
+  document.getElementById('popStreak').textContent = state.streak;
+  document.getElementById('streakOverlay').classList.add('show');
+}
+function closeStreakPopup(e) {
+  if (!e || e.target === document.getElementById('streakOverlay') || e.target.classList.contains('ocard-close')) {
+    document.getElementById('streakOverlay').classList.remove('show');
+  }
+}
+
+function goScr(name) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.nbtn').forEach(b => b.classList.remove('on'));
+  document.getElementById('scr-' + name).classList.add('on');
+  
+  const nb = document.getElementById('nb-' + name);
+  if (nb) nb.classList.add('on');
+  
+  if (name === 'prog') renderProg();
+  if (name === 'prof') renderAll();
+  window.scrollTo(0,0);
+}
+
+function confirmReset() {
+  if (confirm('This will wipe all your franchise data. Are you sure, Coach?')) {
+    localStorage.removeItem(KEY);
+    state = freshState();
+    saveState();
+    bootApp();
+  }
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+function bootApp() {
+  if(state.needsSetup) {
+    document.getElementById('mainHeader').style.display = 'none';
+    document.getElementById('mainStreakRow').style.display = 'none';
+    document.getElementById('mainNav').style.display = 'none';
+    goScr('setup');
+  } else {
+    document.getElementById('mainHeader').style.display = 'flex';
+    document.getElementById('mainStreakRow').style.display = 'flex';
+    document.getElementById('mainNav').style.display = 'flex';
+    checkDateAndSync();
+    renderAll();
+    goScr('home');
+  }
+}
+
+bootApp();
+</script>
+</body>
+</html>
